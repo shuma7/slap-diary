@@ -2,6 +2,14 @@
  * Supabase Database の型定義
  * supabase.ts で使用する Database 型
  */
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
 export interface Database {
   public: {
     Tables: {
@@ -33,7 +41,20 @@ export interface Database {
           condition?: number | null;
           updated_at?: string | null;
         };
+        Relationships: []
       };
     };
-  };
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
