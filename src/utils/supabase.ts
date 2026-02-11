@@ -14,3 +14,13 @@ console.log('==========================================');
 // Supabase クライアントのインスタンスを作成
 // Database 型を指定することで、型安全なクエリが可能になる
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+
+// デバッグ: 作成されたクライアントの内部状態を確認
+console.log('=== Supabase Client Debug ===');
+// @ts-ignore - 内部プロパティにアクセスするため
+console.log('Client supabaseUrl:', supabase.supabaseUrl);
+// @ts-ignore
+console.log('Client rest URL:', supabase.rest?.url);
+// @ts-ignore
+console.log('Client realtime URL:', supabase.realtime?.endPoint);
+console.log('============================');
