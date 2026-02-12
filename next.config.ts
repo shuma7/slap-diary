@@ -8,6 +8,6 @@ const nextConfig: NextConfig = {
 
 export default withPWA({
   dest: "public",
-  disable: true, // 一時的にPWAを無効化してデバッグ
+  disable: process.env.NODE_ENV === "development",
   register: true,
 })(nextConfig);

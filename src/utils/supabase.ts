@@ -5,22 +5,6 @@ import type { Database } from '@/types/database';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// デバッグ: 環境変数が正しく読み込まれているか確認
-console.log('=== Supabase Environment Variables Debug ===');
-console.log('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl);
-console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'NOT SET');
-console.log('==========================================');
-
 // Supabase クライアントのインスタンスを作成
 // Database 型を指定することで、型安全なクエリが可能になる
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-
-// デバッグ: 作成されたクライアントの内部状態を確認
-console.log('=== Supabase Client Debug ===');
-// @ts-ignore - 内部プロパティにアクセスするため
-console.log('Client supabaseUrl:', supabase.supabaseUrl);
-// @ts-ignore
-console.log('Client rest URL:', supabase.rest?.url);
-// @ts-ignore
-console.log('Client realtime URL:', supabase.realtime?.endPoint);
-console.log('============================');
