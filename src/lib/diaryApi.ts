@@ -75,6 +75,25 @@ export async function deleteDiary(id: number): Promise<void> {
 }
 
 /**
+ * 日記をキーワードで検索
+ */
+export async function searchDiaries(keyword: string): Promise<Diary[]> {
+  const { data, error } = await supabase
+    .from("diaries")
+    .select("*")
+    .ilike("content", `%${keyword}%`)
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("検索に失敗しました:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
  * 「あの日」機能: 今日と同じ月日の過去エントリーを取得
  */
 export async function getOnThisDay(): Promise<Diary[]> {

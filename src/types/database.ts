@@ -43,6 +43,30 @@ export interface Database {
         };
         Relationships: []
       };
+      push_subscriptions: {
+        Row: {
+          id: number;
+          endpoint: string;
+          keys_p256dh: string;
+          keys_auth: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          endpoint: string;
+          keys_p256dh: string;
+          keys_auth: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          endpoint?: string;
+          keys_p256dh?: string;
+          keys_auth?: string;
+          created_at?: string;
+        };
+        Relationships: []
+      };
     };
     Views: {
       [_ in never]: never

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { BookText, MessageSquare } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { BookText, MessageSquare, Search, X } from "lucide-react";
 import DiaryEntryForm from "@/components/DiaryEntryForm";
 import QuickMemoModal from "@/components/QuickMemoModal";
 import Timeline from "@/components/Timeline";
 import OnThisDay from "@/components/OnThisDay";
-import { getAllDiaries, getOnThisDay } from "@/lib/diaryApi";
+import NotificationSettings from "@/components/NotificationSettings";
+import { getAllDiaries, getOnThisDay, searchDiaries } from "@/lib/diaryApi";
 import type { Diary } from "@/types/diary";
 
 export default function Home() {
@@ -16,6 +17,10 @@ export default function Home() {
   const [entries, setEntries] = useState<Diary[]>([]);
   const [onThisDayEntries, setOnThisDayEntries] = useState<Diary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Diary[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 初回読み込み時にデータを取得
   useEffect(() => {
@@ -56,6 +61,40 @@ export default function Home() {
   // エントリーを削除（コールバック関数）
   const handleEntryDeleted = (id: number) => {
     setEntries(entries.filter((e) => e.id !== id));
+    if (searchResults) {
+      setSearchResults(searchResults.filter((e) => e.id !== id));
+    }
+  };
+
+  // 検索処理（デバウンス付き）
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    if (!query.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        setSearching(true);
+        const results = await searchDiaries(query.trim());
+        setSearchResults(results);
+      } catch (error) {
+        console.error("検索に失敗しました:", error);
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults(null);
   };
 
   return (
@@ -63,8 +102,13 @@ export default function Home() {
       {/* ヘッダー */}
       <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-100">slapDiary</h1>
-          <p className="text-sm text-gray-400">日記</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-100">slapDiary</h1>
+              <p className="text-sm text-gray-400">日記</p>
+            </div>
+            <NotificationSettings />
+          </div>
         </div>
       </header>
 
@@ -91,6 +135,31 @@ export default function Home() {
           </button>
         </div>
 
+        {/* 検索バー */}
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="日記を検索..."
+            className="w-full pl-10 pr-10 py-3 bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+            >
+              <X size={18} />
+            </button>
+          )}
+          {searching && (
+            <span className="absolute right-10 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+              検索中...
+            </span>
+          )}
+        </div>
+
         {/* 投稿フォーム（トグル表示） */}
         {showEntryForm && (
           <DiaryEntryForm
@@ -99,8 +168,8 @@ export default function Home() {
           />
         )}
 
-        {/* あの日（過去の今日） */}
-        {!loading && <OnThisDay entries={onThisDayEntries} />}
+        {/* あの日（過去の今日）- 検索中は非表示 */}
+        {!loading && !searchResults && <OnThisDay entries={onThisDayEntries} />}
 
         {/* タイムライン */}
         {loading ? (
@@ -109,6 +178,13 @@ export default function Home() {
               読み込み中...
             </div>
           </div>
+        ) : searchResults ? (
+          <>
+            <div className="text-sm text-gray-400">
+              検索結果: {searchResults.length}件
+            </div>
+            <Timeline entries={searchResults} onEntryDeleted={handleEntryDeleted} />
+          </>
         ) : (
           <Timeline entries={entries} onEntryDeleted={handleEntryDeleted} />
         )}
