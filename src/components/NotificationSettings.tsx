@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, BellOff } from "lucide-react";
+import { Bell, BellOff, Send } from "lucide-react";
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
 
@@ -20,6 +20,8 @@ export default function NotificationSettings() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [supported, setSupported] = useState(false);
+  const [debugLoading, setDebugLoading] = useState(false);
+  const [debugResult, setDebugResult] = useState<string | null>(null);
 
   useEffect(() => {
     checkSubscription();
@@ -106,29 +108,65 @@ export default function NotificationSettings() {
     }
   };
 
+  const sendDebugReport = async () => {
+    try {
+      setDebugLoading(true);
+      setDebugResult(null);
+      const res = await fetch("/api/daily-report");
+      const json = await res.json();
+      if (json.report) {
+        setDebugResult(json.report);
+      } else {
+        setDebugResult(JSON.stringify(json));
+      }
+    } catch (error) {
+      setDebugResult(`エラー: ${error}`);
+    } finally {
+      setDebugLoading(false);
+    }
+  };
+
   if (!supported) {
     return null;
   }
 
   return (
-    <button
-      onClick={isSubscribed ? unsubscribe : subscribe}
-      disabled={loading}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-        isSubscribed
-          ? "bg-amber-900/50 text-amber-300 border border-amber-700 hover:bg-amber-900/70"
-          : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
-      } disabled:opacity-50`}
-      title={isSubscribed ? "毎朝7:00のレポート通知をOFF" : "毎朝7:00のレポート通知をON"}
-    >
-      {isSubscribed ? <Bell size={16} /> : <BellOff size={16} />}
-      <span>
-        {loading
-          ? "処理中..."
-          : isSubscribed
-          ? "朝のレポート ON"
-          : "朝のレポート OFF"}
-      </span>
-    </button>
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex gap-2">
+        <button
+          onClick={sendDebugReport}
+          disabled={debugLoading}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-purple-900/50 text-purple-300 border border-purple-700 hover:bg-purple-900/70 disabled:opacity-50"
+          title="デバッグ: レポートを今すぐ送信"
+        >
+          <Send size={16} />
+          <span>{debugLoading ? "送信中..." : "テスト送信"}</span>
+        </button>
+        <button
+          onClick={isSubscribed ? unsubscribe : subscribe}
+          disabled={loading}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            isSubscribed
+              ? "bg-amber-900/50 text-amber-300 border border-amber-700 hover:bg-amber-900/70"
+              : "bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600"
+          } disabled:opacity-50`}
+          title={isSubscribed ? "毎朝7:00のレポート通知をOFF" : "毎朝7:00のレポート通知をON"}
+        >
+          {isSubscribed ? <Bell size={16} /> : <BellOff size={16} />}
+          <span>
+            {loading
+              ? "処理中..."
+              : isSubscribed
+              ? "朝のレポート ON"
+              : "朝のレポート OFF"}
+          </span>
+        </button>
+      </div>
+      {debugResult && (
+        <div className="max-w-xs text-xs text-purple-300 bg-purple-900/30 border border-purple-700 rounded-lg px-3 py-2 text-right">
+          {debugResult}
+        </div>
+      )}
+    </div>
   );
 }

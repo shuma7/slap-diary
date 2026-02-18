@@ -76,7 +76,7 @@ ${diaryText}`;
 
     if (subError) {
       console.error('購読者の取得に失敗:', subError);
-      return NextResponse.json({ error: '購読者の取得に失敗' }, { status: 500 });
+      return NextResponse.json({ error: '購読者の取得に失敗', detail: String(subError.message) }, { status: 500 });
     }
 
     const payload = JSON.stringify({
@@ -121,6 +121,6 @@ ${diaryText}`;
     });
   } catch (error) {
     console.error('デイリーレポートエラー:', error);
-    return NextResponse.json({ error: 'レポート生成に失敗' }, { status: 500 });
+    return NextResponse.json({ error: 'レポート生成に失敗', detail: String(error) }, { status: 500 });
   }
 }
