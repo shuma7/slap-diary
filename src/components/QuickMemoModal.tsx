@@ -83,7 +83,13 @@ export default function QuickMemoModal({
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="今の気持ちを一言..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (content.trim() && !saving) handleSubmit(e as unknown as React.FormEvent);
+              }
+            }}
+            placeholder="今の気持ちを一言... (Enter で保存 / Shift+Enter で改行)"
             autoFocus
             rows={4}
             className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
