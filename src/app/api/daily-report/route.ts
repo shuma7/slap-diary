@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 
     // Gemini APIでレポート生成
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const diaryText = diaries.map(d => {
       const moodText = d.mood ? `気分:${d.mood}/5` : '';
