@@ -115,7 +115,11 @@ export default function NotificationSettings() {
       const res = await fetch("/api/daily-report");
       const json = await res.json();
       if (json.report) {
-        setDebugResult(json.report);
+        const sent = json.notificationsSent ?? 0;
+        const total = json.totalSubscriptions ?? 0;
+        setDebugResult(
+          `📬 購読数: ${total} / 送信成功: ${sent}\n\n${json.report}`
+        );
       } else {
         setDebugResult(JSON.stringify(json));
       }
