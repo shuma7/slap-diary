@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 import webpush from 'web-push';
 import { createServerSupabaseClient } from '@/utils/supabase-server';
 
@@ -43,9 +43,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: '日記がありません' });
     }
 
-    // Gemini APIでレポート生成
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    // Claude APIでレポート生成
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const diaryText = diaries.map(d => {
       const moodText = d.mood ? `気分:${d.mood}/5` : '';
@@ -54,7 +53,13 @@ export async function GET(request: Request) {
       return `【${d.date}】${meta}\n${d.content}`;
     }).join('\n\n');
 
-    const prompt = `あなたは優しくて気の利く日記アシスタントです。
+    const message = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      messages: [
+        {
+          role: 'user',
+          content: `あなたは優しくて気の利く日記アシスタントです。
 以下はユーザーの最近1週間の日記です。この日記を読んで、ユーザーに寄り添った短いモーニングメッセージを作成してください。
 
 ルール:
@@ -64,10 +69,12 @@ export async function GET(request: Request) {
 - 体調や気分の変化があれば気遣う
 
 日記:
-${diaryText}`;
+${diaryText}`,
+        },
+      ],
+    });
 
-    const result = await model.generateContent(prompt);
-    const report = result.response.text();
+    const report = message.content[0].type === 'text' ? message.content[0].text : '';
 
     // プッシュ通知を送信
     const { data: subscriptions, error: subError } = await supabase
